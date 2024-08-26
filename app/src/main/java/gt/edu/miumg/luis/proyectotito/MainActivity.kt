@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         }
 
 //        var botonUno:Button = findViewById(R.id.botonUno)
-//        botonUno.setOnClickListener {
+//        botonUno.setOnClickListener {//
 //            botonUno.textSize = 30f
 //            botonUno.setTextColor(Color.BLUE)
 //            botonUno.text = "X"
