@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ProyecToTiTo</string>
+    <string name="hola_mundo">Hola Mundo!</string>
+    <string name="totito">ToTiTo</string>
+    <string name="vacio">vacio</string>
+    <string name="mi_primer_app">Mi Primer App:</string>
+</resources>
