@@ -1,7 +1,13 @@
 package gt.edu.miumg.luis.proyectotito
 
+import android.animation.AnimatorSet
+import android.animation.ArgbEvaluator
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -9,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import gt.edu.miumg.luis.proyectotito.ManejoDeCasillas.ToTiTo
@@ -18,18 +25,22 @@ class MainActivity : AppCompatActivity() {
 
     private val juego = ToTiTo()
 
+    private var botones: Array<Button> =  arrayOf()
+
     private lateinit var jugadorUno: TextView
     private lateinit var jugadorDos: TextView
     private lateinit var jugadorGanador: TextView
 
+    private lateinit var botonReiniciar: Button
+
     private var nombreDelGanador: String? = null
     private var simboloDelGanador: String? = null
 
-    var turno:Int = 1
-    var empate:Int = 0
-    var contadorJugadorUno:Int = 0
-    var contadorJugadorDos:Int = 0
-    var contadorEmpates:Int = 0
+//    var turno:Int = 1
+//    var empate:Int = 0
+//    var contadorJugadorUno:Int = 0
+//    var contadorJugadorDos:Int = 0
+//    var contadorEmpates:Int = 0
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,13 +53,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        jugadorUno = findViewById(R.id.textViewNombreJugadorUno)
-        jugadorDos = findViewById(R.id.textViewNombreJugadorDos)
-        jugadorGanador = findViewById(R.id.textViewJugadorGanador)
-
-        actualizarTurnoDelJugador()
-
-        val botones: Array<Button> =  arrayOf(
+        botones = arrayOf(
             findViewById(R.id.botonUno),
             findViewById(R.id.botonDos),
             findViewById(R.id.botonTres),
@@ -59,6 +64,12 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.botonOcho),
             findViewById(R.id.botonNueve)
         )
+        jugadorUno = findViewById(R.id.textViewNombreJugadorUno)
+        jugadorDos = findViewById(R.id.textViewNombreJugadorDos)
+        jugadorGanador = findViewById(R.id.textViewJugadorGanador)
+        botonReiniciar = findViewById(R.id.buttonReiniciar)
+
+        actualizarTurnoDelJugador()
 
         for (i in botones.indices) {
             botones[i].setOnClickListener {
@@ -71,12 +82,11 @@ class MainActivity : AppCompatActivity() {
                     val simboloDelJugador = if (juego.getTurnoDelJugador() == 1) "X" else "O"
                     botones[i].text = simboloDelJugador // Asigna "X" o "O" al botón
                     botones[i].isEnabled = false
+                    animarBoton(botones[i], simboloDelJugador)
                     val ganador = juego.comprobarGanador()
                     if (ganador != 0) {
-                        botones[i].setTextColor(Color.BLACK)
-                        for (boton in botones) {
-                            boton.isEnabled = false
-                        }
+                        //botones[i].setTextColor(Color.BLACK)
+                        desactivarTablero()
                         nombreDelGanador = if (ganador == 1) "Jugador 1" else "Jugador 2"
                         simboloDelGanador = simboloDelJugador
                         mostrarMensajeAlGanador()
@@ -85,12 +95,17 @@ class MainActivity : AppCompatActivity() {
                     } else if (juego.comprobarTableroLleno()) {
                         // Tablero lleno (empate)
                         // Muestra un mensaje y reinicia el juego
+                        //actualizarTurnoDelJugador(esEmpate = true)
+                        actualizarTurnoDelJugador(esEmpate = true)
                         Toast.makeText(this, "El tablero se lleno, reinicia el juego", Toast.LENGTH_SHORT).show()
-                        juego.reiniciarJuego()
+                    } else {
+                        actualizarTurnoDelJugador()
                     }
-                    actualizarTurnoDelJugador()
                 }
             }
+        }
+        botonReiniciar.setOnClickListener {
+            reinicarJuego()
         }
 
 //        var botonUno:Button = findViewById(R.id.botonUno)
@@ -168,22 +183,83 @@ class MainActivity : AppCompatActivity() {
         // La actividad se esta creando.
     }
 
-    private fun actualizarTurnoDelJugador() {
-        val nombreDelJugador = nombreDelGanador ?: if (juego.getTurnoDelJugador() == 1) "Jugador 1" else "Jugador 2"
-        val simboloDelJugador = simboloDelGanador ?: if (juego.getTurnoDelJugador() == 1) "O" else "X"
-        jugadorUno.text = "$nombreDelJugador ($simboloDelJugador)"
-        jugadorDos.text = "$nombreDelJugador ($simboloDelJugador)"
+//    private fun empate(esEmpate: Boolean = false) {
+//        if (!esEmpate) {
+//            val nombreDelJugador = if (juego.getTurnoDelJugador() == 1) "Jugador 1" else "Jugador 2"
+//            val simboloDelJugador = if (juego.getTurnoDelJugador() == 1) "X" else "O"
+//            jugadorUno.text = "$nombreDelJugador ($simboloDelJugador)"
+//            jugadorDos.text = "$nombreDelJugador ($simboloDelJugador)"
+//        }
+//    }
+
+
+    private fun animarBoton(boton: Button, simbolo: String) {
+        val colorInicial = Color.WHITE
+        val colorFinal = Color.BLACK
+        val duracion = 500L // Duración de la animación en milisegundos
+
+        val colorAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorInicial, colorFinal)
+        colorAnim.duration = duracion
+        colorAnim.addUpdateListener { animator ->
+            boton.setBackgroundColor(animator.animatedValue as Int)
+        }
+
+        // Animación de rotación del texto
+        val rotationAnim = ObjectAnimator.ofFloat(boton, "rotation", 0f, 360f)
+        rotationAnim.duration = duracion
+
+        // Iniciar ambas animaciones
+        val animatorSet = AnimatorSet()
+        animatorSet.playTogether(colorAnim, rotationAnim)
+        animatorSet.start()
+
+        if (simbolo == "X") {
+            boton.setTextColor(Color.RED)
+        }
+
+        if (simbolo == "O"){
+            boton.setTextColor(Color.CYAN)
+        }
+        // Cambiar el color del borde del texto
+        //boton.setTextColor(Color.RED)
+        boton.paint.strokeWidth = 10f
+        boton.paint.style = Paint.Style.STROKE
+        boton.paint.color = Color.WHITE
+    }
+
+
+    private fun reinicarJuego() {
+        juego.reiniciarJuego()
+        for (boton in botones) {
+            boton.setBackgroundColor(Color.WHITE)
+            boton.text = ""
+            boton.isEnabled = true
+        }
+        nombreDelGanador = null
+        simboloDelGanador = null
+        jugadorGanador.text = "Jugador Ganador: por definir"
+
+        actualizarTurnoDelJugador()
+    }
+
+    private fun actualizarTurnoDelJugador(esEmpate: Boolean = false) {
+        if (!esEmpate){
+            val nombreDelJugador = nombreDelGanador ?: if (juego.getTurnoDelJugador() == 1) "Jugador 1" else "Jugador 2"
+            val simboloDelJugador = simboloDelGanador ?: if (juego.getTurnoDelJugador() == 1) "O" else "X"
+            jugadorUno.text = "$nombreDelJugador ($simboloDelJugador)"
+            jugadorDos.text = "$nombreDelJugador ($simboloDelJugador)"
+        }
     }
 
     private fun mostrarMensajeAlGanador() {
         jugadorGanador.text = "$nombreDelGanador ($simboloDelGanador) ganó la partida"
     }
 
-//    private fun desactivarTablero() {
-//        for (boton in botones) {
-//            boton.isEnabled = false
-//        }
-//    }
+    private fun desactivarTablero() {
+        for (boton in botones) {
+            boton.isEnabled = false
+        }
+    }
 
     private fun agregarPuntos(){
 

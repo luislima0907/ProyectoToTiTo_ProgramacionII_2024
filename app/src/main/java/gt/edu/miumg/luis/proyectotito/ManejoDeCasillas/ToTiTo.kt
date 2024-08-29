@@ -7,7 +7,7 @@ class ToTiTo {
     fun comprobarMovimiento(fila: Int, columna: Int): Boolean {
         if (fila in 0..2 && columna in 0..2 && tablero[fila][columna] == 0) {
             tablero[fila][columna] = turnoDelJugador
-            turnoDelJugador = 3 - turnoDelJugador // Alternar entre 1 y 2
+            turnoDelJugador = 3 - turnoDelJugador
             return true
         }
         return false
@@ -50,7 +50,6 @@ class ToTiTo {
                 tablero[fila][columna] = 0
             }
         }
-        turnoDelJugador = 1
     }
 
     fun getTurnoDelJugador(): Int{
